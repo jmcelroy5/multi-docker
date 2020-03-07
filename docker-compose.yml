@@ -1,0 +1,71 @@
+# To run: docker compose up
+version: '3'
+services:
+  postgres:
+    image: 'postgres:latest'
+  redis:
+    image: 'redis:latest'
+  nginx:
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./nginx
+    ports:
+      # map local port 3050 (this is arbitary) to 80 (from nginx docs i think)
+      - '3050:80'
+    # not necessary, just helps with potential connection errors
+    depends_on:
+      - api
+      - client
+  api:
+    # tells docker how to build an image with your files
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./server
+    volumes:
+      - /app/node_modules
+      # anytime our app tries to access anything inside app directory inside container (except for node_modules above)
+      # it'll get redirected to the server directory of our current project folder, so, anytime we make a change to
+      # anything inside /server it'll be automatically reflected inside the /app folder of our container, and this makes
+      # sure we don't have to rebuild our image every time we make a little change to source code
+      - ./server:/app
+    environment:
+      # note: if you don't include the = and value, itll grab the env var from your local computer
+      # we can just use "redis" for the value since it was defined in the dockerfile
+      - REDIS_HOST=redis
+      # found in the redis docker hub documentation
+      - REDIS_PORT=6379
+      - PGUSER=postgres
+      # bc this is the name of our postgres service defined above
+      - PGHOST=postgres
+      - PGDATABASE=postgres
+      # Default password for any postgres db
+      - PGPASSWORD=postgres_password
+      # Default port (found in postgres docs)
+      - PGPORT=5432
+    depends_on:
+      - postgres
+  client:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./react_client
+    volumes:
+      # makes sure node_modules dir in the container wont get overwritten by node_modules we have inside the client
+      - /app/node_modules
+      # everything in the ./react_client should be shared with the /app dir in the container
+      - ./react_client:/app
+  worker:
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./worker
+    volumes:
+      - /app/node_modules
+      - ./worker:/app
+
+# More notes
+# run everything in here, --build forces a rebuild:
+# docker-compose up --build
+
