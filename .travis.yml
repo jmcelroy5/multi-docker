@@ -1,0 +1,16 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  # build test version of react client project
+  - docker build -t jessicamcelroy/react-test -f ./react-client/Dockerfile.dev ./react-client
+
+script:
+  # run react client tests
+  #  -- --coverage makes sure npm test doesnt run in watch mode
+  - docker run jessicamcelroy/react-test npm test -- --coverage
+
+after_success:
+  - docker biuld -t jessicamcelroy/multi-react-client
+  -
