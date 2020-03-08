@@ -1,16 +1,31 @@
 sudo: required
+
+# Specify docker as a dependency
 services:
   - docker
 
+# build test version of react project
 before_install:
-  # build test version of react client project
   - docker build -t jessicamcelroy/react-test -f ./react-client/Dockerfile.dev ./react-client
 
+# run tests (just react but could run addtl test suites here)
 script:
-  # run react client tests
-  #  -- --coverage makes sure npm test doesnt run in watch mode
-  - docker run jessicamcelroy/react-test npm test -- --coverage
+  - docker run -e CI=true jessicamcelroy/react-test npm test
 
+# build images using production dockerfile for each project subfolder
 after_success:
-  - docker biuld -t jessicamcelroy/multi-react-client
-  -
+  # -t is the tag for the image
+  - docker build -t jessicamcelroy/multi-react-client ./react-client
+  - docker build -t jessicamcelroy/multi-nginx ./nginx
+  - docker build -t jessicamcelroy/multi-server ./server
+  - docker build -t jessicamcelroy/multi-worker ./worker
+  # First must login to docker CLI
+  # We use encrypted environment variables only available to travis ci
+  # To set these, go to the docker webapp --> select the repo --> more options --> settings
+  # Can't just do "docker login" bc its a CLI tool that has 2 separate prompts for un/pw
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push jessicamcelroy/multi-react-client
+  - docker push jessicamcelroy/multi-nginx
+  - docker push jessicamcelroy/multi-server
+  - docker push jessicamcelroy/multi-worker
