@@ -1,9 +1,16 @@
 # To run: docker compose up
+# This file is primarily meant for use in development env
+# The info here would normally be passed directly to docker run
+# It lists out services, tells docker how to build the images, which ports to open, env vars, etc.
+# i.e. Directions on how to build an image using the dockerfile
 version: '3'
 services:
   postgres:
+  # remember that this docker-compose file describes our dev arch setup
+  # in your prod env you'll likely use AWS Relational Database Service (RDS) instead of running a postgres container
     image: 'postgres:latest'
   redis:
+    # in a prod env you would likely use AWS Elastic Cache instead of running a redis instance
     image: 'redis:latest'
   nginx:
     restart: always
@@ -11,7 +18,7 @@ services:
       dockerfile: Dockerfile.dev
       context: ./nginx
     ports:
-      # map local port 3050 (this is arbitary) to 80 (from nginx docs i think)
+      # map local port 3050 (this is arbitary) to 80 (nginx default)
       - '3050:80'
     # not necessary, just helps with potential connection errors
     depends_on:
@@ -36,11 +43,11 @@ services:
       # found in the redis docker hub documentation
       - REDIS_PORT=6379
       - PGUSER=postgres
+      # Default password for any postgres db
+      - PGPASSWORD=postgres_password
       # bc this is the name of our postgres service defined above
       - PGHOST=postgres
       - PGDATABASE=postgres
-      # Default password for any postgres db
-      - PGPASSWORD=postgres_password
       # Default port (found in postgres docs)
       - PGPORT=5432
     depends_on:
