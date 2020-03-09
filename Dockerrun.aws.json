@@ -1,63 +1,39 @@
-// search for documentation on Amazon Elastic Container Services (ECS)
-// here we are writing task definitions to tell Amazon ECS how to handle/deploy our docker images
 {
   "AWSEBDockerrunVersion": 2,
-  // one entry for each container we want to create
   "containerDefinitions": [
     {
-      // container name is arbitrary, will show up on your AWS dashboard
       "name": "client",
-      // corresponds to the container that will be created as part of our deployment (should match docker hub)
       "image": "jessicamcelroy/multi-react-client",
-      // essentially becomes an address (like google.com) for other containers to talk to this container
       "hostname": "client",
-      // means that if this container crashes, no need to shut down other containers. it can run independently.
-      // note that at least one service in here needs to be flagged as essential
       "essential": false,
-      // amount in MB to allocate
       "memory": 128
     },
     {
       "name": "server",
       "image": "jessicamcelroy/multi-server",
-      // what the nginx service needs to look for when it redirects traffic upstream
       "hostname": "api",
       "essential": false,
-      // amount in MB to allocate
       "memory": 128
     },
     {
       "name": "worker",
       "image": "jessicamcelroy/multi-worker",
-      // not required bc no other service directly reaches out to the worker
       "hostname": "worker",
       "essential": false,
-      // amount in MB to allocate
       "memory": 128
-
     },
     {
-      // container that routes incoming requests either to client or api server
       "name": "nginx",
       "image": "jessicamcelroy/multi-nginx",
-      // not required to add in a hostname bc no other service needs to directly access nginx (optional field)
       "hostname": "nginx",
-      // its the entrypoint
       "essential": true,
-      // maps a port in the container to a port on the host (machine running all these containers)
       "portMappings": [
         {
-          // open up a port on the machine hosting our containers
           "hostPort": 80,
-          //  and map that to port 80 inside the container (default port nginx listens to inside container)
           "containerPort": 80
         }
       ],
-      // have to be explicit about connections between containers
-      // nginx needs to send traffic from nginx server to either client or api
-      // links are uni-directional
       "links": ["client", "server"],
-      // amount in MB to allocate
       "memory": 128
     }
   ]
