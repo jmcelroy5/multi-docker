@@ -8,6 +8,7 @@ function App() {
   return (
     <Router>
       <div className="App">
+        <h1>Fib Calculator</h1>
         <Route exact path="/" component={FibCalculator} />
       </div>
     </Router>
