@@ -1,5 +1,6 @@
 # To run: docker compose up
-# This file is primarily meant for use in development env
+# This file is primarily meant for use in development and CI env
+# For prod, we have the Dockerrun which tells Amazon what to do with the built images
 # The info here would normally be passed directly to docker run
 # It lists out services, tells docker how to build the images, which ports to open, env vars, etc.
 # i.e. Directions on how to build an image using the dockerfile
